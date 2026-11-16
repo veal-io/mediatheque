@@ -180,6 +180,10 @@ Platforms change their sites often. In order:
 1. Choose **Tools > Update Engine**. This pulls the latest [yt-dlp](https://github.com/yt-dlp/yt-dlp), which usually fixes it within a day or two of a platform change.
 2. Try **Cookies**.
 3. Click **View Log** in the Downloader and pick the platform. Each platform logs to its own file in `%APPDATA%\Mediatheque\logs\` (on a Mac, `~/Library/Application Support/Mediatheque/logs`).
+4. **Help > Check Setup…** lists what Mediatheque needs on this computer, with a fix beside anything missing: Python 3.10 or newer, Edge or Chrome, Firefox, ffmpeg and which H.264 encoder works, Screen Recording permission (on a Mac), and how old the download engine is (over four weeks suggests **Tools > Update Engine**).
+5. **Help > Report a Problem…** saves a zip on the Desktop and shows it in Finder or Explorer, ready to send: the logs folder, plus a note of Mediatheque's version, the system's, Python's and yt-dlp's, and optionally what you were doing. No projects, cookies, keys or settings go in it.
+
+The version number is `__version__` in `mediatheque/__init__.py`, shown in **Help > About**.
 
 ## Layout
 

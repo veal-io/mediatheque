@@ -203,6 +203,9 @@ class MainWindow(QMainWindow):
         self.delete_practice_action = action(help_menu, "&Delete Practice Project", self._delete_practice)
         help_menu.aboutToShow.connect(self._help_menu_opening)
         help_menu.addSeparator()
+        action(help_menu, "&Report a Problem…", self._report_problem)
+        action(help_menu, "Check &Setup…", self._check_setup)
+        help_menu.addSeparator()
         action(help_menu, "&About Mediatheque", self._about)
 
     # -- the Script Tutorial ---------------------------------------------------------------
@@ -282,11 +285,21 @@ class MainWindow(QMainWindow):
             self.status_msg.setText("Removed the saved Claude API key." if dlg.removed else "Claude API key saved.")
 
     def _about(self) -> None:
+        from .. import __version__
         QMessageBox.about(
             self, "About Mediatheque",
-            "<b>Mediatheque</b><br>Video essay multi-tool: YouTube, TikTok, Instagram and Facebook downloader,"
+            f"<b>Mediatheque {__version__}</b>" + (" (editor edition)" if edition.EDITOR else "")
+            + "<br>Video essay multi-tool: YouTube, TikTok, Instagram and Facebook downloader,"
             " article screenshots, script projects, and the patron Credit Generator.<br><br>"
             f"Engine: yt-dlp {YTDLP_VERSION}")
+
+    def _report_problem(self) -> None:
+        from .help_dialogs import ReportDialog
+        ReportDialog(self).exec()
+
+    def _check_setup(self) -> None:
+        from .help_dialogs import CheckSetupDialog
+        CheckSetupDialog(self).exec()
 
     def show_tool(self, index: int) -> None:
         self.stack.setCurrentIndex(index)
