@@ -1,0 +1,40 @@
+#!/bin/bash
+# Mediatheque.app's launcher: what Mediatheque.command does, without a Terminal window.
+APP="$(cd "$(dirname "$0")/../.." && pwd)"
+ROOT="$(dirname "$APP")"
+[ -d "$ROOT/mediatheque" ] || ROOT="$HOME/Mediatheque"   # the app was moved out of the folder
+LOGDIR="$HOME/Library/Application Support/Mediatheque/logs"
+mkdir -p "$LOGDIR"
+LOG="$LOGDIR/launch.log"
+[ -f "$LOG" ] && [ "$(wc -c < "$LOG")" -gt 2000000 ] && mv -f "$LOG" "$LOG.old"
+exec >>"$LOG" 2>&1
+echo "===== $(date)"
+
+fail() {
+    osascript -e "display alert \"Mediatheque couldn't start\" message \"$1
+
+The details are in Application Support > Mediatheque > logs > launch.log. Mediatheque.command (in the Mediatheque folder) shows them as it starts.\" as critical" >/dev/null
+    exit 1
+}
+note() { osascript -e "display notification \"$1\" with title \"Mediatheque\"" >/dev/null; }
+
+cd "$ROOT" || fail "The Mediatheque folder wasn't found next to the app or in your home folder."
+
+if [ ! -x ".venv/bin/python" ]; then
+    note "Setting up for the first time. This takes a few minutes."
+    PY="$(command -v python3)"
+    [ -n "$PY" ] || fail "Python 3.10 or newer is needed: https://www.python.org/downloads/macos/"
+    "$PY" -m venv .venv || fail "Couldn't set up Python."
+    .venv/bin/python -m pip install --upgrade pip
+    .venv/bin/python -m pip install -r requirements.txt || fail "Couldn't install Mediatheque's packages."
+fi
+.venv/bin/python -c "import anthropic, keyring" 2>/dev/null || .venv/bin/python -m pip install -r requirements.txt
+if ! .venv/bin/python -c "import sys; from mediatheque.screenshots.naming import own_browser; sys.exit(0 if own_browser() else 1)" 2>/dev/null; then
+    note "Downloading Mediatheque's own browser (once, a few minutes)."
+    .venv/bin/python -m playwright install chromium || echo "Couldn't download the browser; using Google Chrome."
+fi
+# Python was updated: refresh the app's copy of it.
+.venv/bin/python -m mediatheque.macapp --check || .venv/bin/python -m mediatheque.macapp \
+    || fail "Couldn't update Mediatheque.app for the new Python."
+
+exec "$APP/Contents/MacOS/Mediatheque-python" -m mediatheque

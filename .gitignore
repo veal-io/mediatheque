@@ -1,0 +1,36 @@
+# Python environment and caches
+.venv/
+__pycache__/
+*.pyc
+.DS_Store
+
+# Moving between computers (personal projects and Suggest profile)
+transfer/
+transfer-imported-*/
+
+# The old stand-alone credits script and its real patron names
+Credit Generator/
+*.csv
+
+# Personal notes, not part of the published program
+LESSONS.md
+MAC.md
+EDITOR_EDITION.md
+
+# Made on each Mac by mediatheque.macapp (a copy of Python and links into .venv)
+Mediatheque.app/Contents/MacOS/Mediatheque-python
+Mediatheque.app/Contents/MacOS/*.new
+Mediatheque.app/Contents/lib/
+Mediatheque.app/Contents/bin
+Mediatheque.app/Contents/pyvenv.cfg
+Mediatheque.app/Contents/.python-source
+
+# Only the editor's copy has this; the owner's copy must not
+edition.json
+
+# Built packages and update leftovers
+dist-editor/
+update-backup/
+update-staging/
+.diag/
+_macdev/
