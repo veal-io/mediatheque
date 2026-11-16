@@ -49,6 +49,7 @@ The details are in Application Support > Mediatheque > logs > launch.log. Mediat
 note() { osascript -e "display notification \"$1\" with title \"Mediatheque\"" >/dev/null; }
 
 cd "$ROOT" || fail "The Mediatheque folder wasn't found next to the app or in your home folder."
+xattr -dr com.apple.quarantine "$ROOT" 2>/dev/null  # opened once already: no more warnings for its files
 
 if [ ! -x ".venv/bin/python" ]; then
     note "Setting up for the first time. This takes a few minutes."
@@ -82,12 +83,25 @@ def _venv() -> tuple[Path, Path, str]:
     return cfg, src, lib
 
 
+def info_plist() -> dict:
+    from . import __version__
+    return {
+        "CFBundleName": "Mediatheque", "CFBundleDisplayName": "Mediatheque",
+        "CFBundleIdentifier": BUNDLE_ID, "CFBundleExecutable": "Mediatheque",
+        "CFBundleIconFile": "Mediatheque", "CFBundlePackageType": "APPL",
+        "CFBundleShortVersionString": __version__, "CFBundleVersion": __version__,
+        "LSMinimumSystemVersion": "11.0", "NSHighResolutionCapable": True,
+        "NSSupportsAutomaticGraphicsSwitching": True,
+    }
+
+
 def needs_refresh() -> bool:
     try:
         cfg, src, lib = _venv()
         contents = APP / "Contents"
         py = contents / "MacOS" / PYTHON_NAME
         return not (py.exists() and (contents / "lib" / lib / "site-packages").exists()
+                    and (contents / "MacOS" / "Mediatheque").read_text() == LAUNCHER  # an update changed it
                     and (contents / "pyvenv.cfg").read_text() == cfg.read_text()
                     and (contents / ".python-source").read_text() == f"{src} {src.stat().st_mtime_ns}")
     except (OSError, StopIteration):
@@ -124,14 +138,7 @@ def build() -> Path:
         d.mkdir(parents=True, exist_ok=True)
 
     with open(contents / "Info.plist", "wb") as f:
-        plistlib.dump({
-            "CFBundleName": "Mediatheque", "CFBundleDisplayName": "Mediatheque",
-            "CFBundleIdentifier": BUNDLE_ID, "CFBundleExecutable": "Mediatheque",
-            "CFBundleIconFile": "Mediatheque", "CFBundlePackageType": "APPL",
-            "CFBundleShortVersionString": "1.0", "CFBundleVersion": "1",
-            "LSMinimumSystemVersion": "11.0", "NSHighResolutionCapable": True,
-            "NSSupportsAutomaticGraphicsSwitching": True,
-        }, f)
+        plistlib.dump(info_plist(), f)
     launcher = macos / "Mediatheque"
     launcher.write_text(LAUNCHER)
     launcher.chmod(0o755)

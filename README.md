@@ -12,7 +12,7 @@ To create (or re-create) the Start menu and desktop shortcuts, for example after
 .venv\Scripts\python -m mediatheque.shortcuts
 ```
 
-**On a Mac:** double-click **Mediatheque** (the app in the Mediatheque folder). See **On a Mac** below, and **MAC.md** for moving your projects between computers.
+**On a Mac:** double-click **Mediatheque** (the app in the Mediatheque folder). See **On a Mac** below<!-- owner -->, and **MAC.md** for moving your projects between computers<!-- /owner -->.
 
 ## On a Mac
 
@@ -25,7 +25,9 @@ Tested on a MacBook Pro (Apple silicon, macOS 15) with Python 3.15 and Google Ch
 
 **One-time permissions:**
 - **Screen recording:** the first time you record, macOS asks. Turn on **Mediatheque** in System Settings > Privacy & Security > Screen & System Audio Recording, then reopen Mediatheque. (If you started it with `Mediatheque.command`, it's **Terminal** that needs the permission instead.) Until then, the recorder says so instead of recording.
+<!-- suggest -->
 - **Keychain:** your Claude API key (Tools > Claude API Key…) is kept in the Mac's Keychain. macOS may ask once whether Python can use it. Choose **Always Allow**. The first time you open Mediatheque with the app, it may ask again, once.
+<!-- /suggest -->
 
 **What's different from Windows:**
 - **Shortcuts use Cmd:** Cmd+1–4 switch tools, Cmd+F finds in the script and Cmd+S saves. Quit with Cmd+Q or File > Exit.
@@ -110,17 +112,19 @@ Click **Script** at the top of the sidebar (or press Ctrl+1, or **File > Open Sc
 - **Your own highlights:** select words in the script and click **Highlight Selection**. Any links embedded in your selection are offered one at a time with a preview: **Attach**, **Skip** or **Attach All**. **Add Links…** on a highlight's card attaches any TikTok, Instagram, YouTube or article link by pasting.
 - **Numbers:** every highlight is numbered, both in the margin beside the script and on its card. Everything it downloads starts with that number: `7_@user.mp4`, `7_Title - Channel.mp4`, `7_NYT_Headline Words.png`. Highlights are numbered 1, 2, 3… in script order, and simply renumber as you add or remove them, until you first run Execute Video Downloads or Execute Screenshotter. From then on numbers are fixed, because they're on files: a highlight added later takes the number before it plus a letter (`7a`, `7b`), and numbers of removed highlights aren't reused.
 - **Adjusting a highlight:** select words that overlap an existing highlight and the button becomes **Adjust Highlight N**. It moves that highlight onto your selection and keeps its number, links, files, images and note. New embedded links in the extra words get the usual Attach / Skip.
-- **Combining highlights:** select words that touch two or more highlights in the same paragraph and the button becomes **Combine Highlights 2 & 3**. They merge into the first one, which keeps its number and covers all their text. Links (with their files), images, video leads and notes from the others move onto it. Before anything has run, the highlights after it renumber as usual. After that, the merged numbers are retired, and files already downloaded keep their old numbers.
+- **Combining highlights:** select words that touch two or more highlights in the same paragraph and the button becomes **Combine Highlights 2 & 3**. They merge into the first one, which keeps its number and covers all their text. Links (with their files), images, <!-- suggest -->video leads <!-- /suggest -->and notes from the others move onto it. Before anything has run, the highlights after it renumber as usual. After that, the merged numbers are retired, and files already downloaded keep their old numbers.
 - **Editing the script's text:** double-click a paragraph to change its words, including adding a line. Edits are saved in the project only (the Word file isn't touched), and highlights and links in that paragraph move with their words. **Revert to Original** undoes your edits to that paragraph.
 - **Finding:** Ctrl+F opens a find bar over the script. Enter goes to the next match, Shift+Enter to the previous one, and Esc closes it.
 - **Clicking a highlight** in the script brings its card into the middle of the Highlights list, with its files marked in blue. Clicking a card jumps the script to its passage.
 - **Re-Take:** a captured article's row has **Re-Take**, which opens the capture window for just that article. Your existing shots are kept, and new ones are numbered on with the usual naming (`15_NYT_Headline (2).png`) and listed with the others. If you skip or close the window, nothing changes.
 - **Skipping an article:** **Skip** on an article link's row leaves it out of Execute Screenshotter. The link stays on the highlight, marked "Left out", and **Include** puts it back.
+<!-- suggest -->
 - **Suggest (Claude):** **Suggest** on a highlight's card (or right-click the highlighted text) asks Claude to research sources for that passage: **Suggest** for both, **Suggest Articles**, or **Suggest Videos**. First a small box asks for any pointers ("US sources only", "find the 2023 Bloomberg piece", "the CEO's interview, not the ad"). Leave it empty to just ask. **Enter** asks, **Shift+Enter** adds a line, and the box remembers what you typed for that highlight. It runs in the background (about a minute) and opens a window with what it found:
   - **Articles** have a preview, why they fit, and the sentence to capture. **Attach** adds the link with that sentence built in, so the Screenshotter opens on it and flashes it. Claude can only offer pages that came up in its own web searches, so links aren't made up.
   - **Videos** are always leads, never links: the platform, what to type into its search, and what clip to look for. **Search** opens that search in your browser; **Keep Lead** saves it on the card. Find the clip, then add it with **Add Links…**.
   - **Learning:** every link attached to any highlight in any project (by hand, from brackets or from Suggest) teaches Suggest what you pick, and so does every suggestion you **Skip**. A short sourcing profile is rewritten from them as projects grow, and each request includes your past passages most like this one.
   - **Cost:** it uses your own Anthropic API key (**Tools > Claude API Key…**, kept in Windows Credential Manager) and Claude Opus 5.5. The window shows roughly what each request cost, typically 10–30¢. The script's text is sent to Anthropic.
+<!-- /suggest -->
 - **Removing a link:** the **✕** at the end of a link's row removes it from the highlight. Anything it already downloaded stays on disk. It's greyed out while that link is downloading or being captured.
 - **Notes:** **Note…** on a highlight's card adds a note, such as what to cut on or which clip to favor. It shows on the card. The highlight's number in the margin gets a yellow corner.
 - **Images:** attach your own images (Photoshop exports, pictures from the web) to a highlight with **Add Images…** on its card, or by dropping them onto the card or onto the highlighted text in the script. Image files from elsewhere are copied into the project's `Images` folder, and an image dragged straight off a web page is downloaded there. File names are left as they are. **Detach** removes an image from the highlight but leaves the file in place, and **Copy All** includes images.
@@ -129,7 +133,7 @@ Click **Script** at the top of the sidebar (or press Ctrl+1, or **File > Open Sc
   - **Video / Article button:** on these rows, the label is a button. Click it to switch a post, for example to screenshot a post that has a video. Your choice is never overwritten.
   - **Article?** means the check failed, so the post counts as an article for now and is checked again on the next Execute. Hover over it for the reason. Reddit needs you signed in to Reddit in Firefox with Cookies set to Firefox.
   - **Deleted X posts:** X reports these the same way as text posts, so they go to the Screenshotter.
-- **Added Sources:** the **Added Sources** tab, beside Highlights and Video Downloads, lists every article attached to a highlight that the script itself doesn't link to, such as ones from **Add Links…** or **Suggest**. It's meant for the sources document at the end of a project. Each entry shows its highlight number and passage, and the list keeps itself up to date. Links in left-out paragraphs, like research notes, count as already in the script, and the same page with a different quote counts once. Each link has its own **Copy** button, and clicking a link opens it. **Copy All Links** copies them all, one per line, and **Copy All with Highlights** adds each one's number and passage. Quote fragments are left off.
+- **Added Sources:** the **Added Sources** tab, beside Highlights and Video Downloads, lists every article attached to a highlight that the script itself doesn't link to, such as ones from **Add Links…**<!-- suggest --> or **Suggest**<!-- /suggest -->. It's meant for the sources document at the end of a project. Each entry shows its highlight number and passage, and the list keeps itself up to date. Links in left-out paragraphs, like research notes, count as already in the script, and the same page with a different quote counts once. Each link has its own **Copy** button, and clicking a link opens it. **Copy All Links** copies them all, one per line, and **Copy All with Highlights** adds each one's number and passage. Quote fragments are left off.
 - **Execute Video Downloads:** downloads every video link, using the Downloader's Quality and Cookies settings. Progress and failures are on the **Video Downloads** tab, with Retry.
 - **Execute Screenshotter:** opens the capture window for every article link. A yellow panel shows the highlight's number and its full passage from the script, with your note beside it, so you know what the shot has to show. It moves to the bottom when the box reaches the top, and **H** hides or shows it. Like the box and the control bar, it's removed before every shot and never appears in the picture.
 - **Files:** each highlight's card lists the files it produced. To bring them into Premiere, drag them onto the Project panel, a bin or the timeline:
@@ -164,6 +168,7 @@ Click **Credits** in the sidebar (or press Ctrl+4):
 
 The sidebar on the left switches between tools: Ctrl+1 Script, Ctrl+2 Downloader, Ctrl+3 Screenshots, Ctrl+4 Credits.
 
+<!-- owner -->
 ## Editions: your copy and an editor's copy
 
 The same code runs as two editions, chosen by one small file, `edition.json`, next to `Mediatheque.command`:
@@ -171,7 +176,10 @@ The same code runs as two editions, chosen by one small file, `edition.json`, ne
 - **Your copy has no `edition.json`.** Everything is on, including Suggest, and it never updates itself.
 - **An editor's copy** (made with **Tools > Pack for Another Editor…**) has `{"suggest": false, "updates": "owner/repo"}`. Suggest is gone: no **Suggest** button on cards, no Suggest items when you right-click the script, no **Lead** rows, no **Tools > Claude API Key…**, and the `anthropic` and `keyring` packages aren't loaded. Video leads, skipped suggestions and pointers saved in a project you send them are kept as they are, just not shown, so the project comes back to you intact.
 
+**Tools > Pack for Another Editor…** makes the editor's zip, `Mediatheque-editor-<version>.zip` on the Desktop. Don't use **Pack for Another Computer…** for an editor: that one carries all your projects. The editor's zip has only the app (the `mediatheque` folder, both launchers, Mediatheque.app, `requirements.txt`), README.md, EDITOR_SETUP.md and `edition.json`. It leaves out `.venv`, git, transfers, LESSONS.md, MAC.md, EDITOR_EDITION.md, the old `Credit Generator` folder (the Credits tool is built in), every `.csv`, and all your data (projects, settings, Suggest profile, logs and browser sign-ins live in Application Support, not in the folder). It checks its own contents before saving and refuses if anything personal slipped in. Parts of this README marked `<!-- owner -->` or `<!-- suggest -->` are taken out of the editor's copy. Mediatheque.app goes in as a bare launcher with no paths from your Mac; the editor's first launch fills in the rest.
+
 The switch is read in `mediatheque/edition.py`. Improvements you make to your copy reach the editor's copy unchanged, with Suggest still switched off.
+<!-- /owner -->
 
 ## When something breaks
 
@@ -198,8 +206,8 @@ mediatheque/
   transfer.py      Tools > Pack for Another Computer, and importing that on the other computer
   credits.py       Credit Generator: reads the CSV and splits the names into three lists
   script/          Script projects: .docx reading and automatic highlights (docx.py),
-                   saved projects (project.py), link previews (previews.py) and
-                   Claude's source suggestions (suggest.py; window in ui/suggest_ui.py)
+                   saved projects (project.py), link previews (previews.py)<!-- suggest --> and
+                   Claude's source suggestions (suggest.py; window in ui/suggest_ui.py)<!-- /suggest -->
   screenshots/     Article Screenshots: script link extraction (links.py), file naming
                    (naming.py), the capture window (session.py) and its in-page box and
                    quote flash (overlay.js, quote.js)

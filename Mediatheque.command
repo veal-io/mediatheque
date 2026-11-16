@@ -3,6 +3,10 @@
 # Python environment. Keep this window open while Mediatheque runs; closing it quits the app.
 cd "$(dirname "$0")" || exit 1
 
+# A downloaded copy is quarantined by macOS. Once you've chosen to open this file, clear that for the
+# whole Mediatheque folder, so Mediatheque.app (and later updates) open without the warning.
+xattr -dr com.apple.quarantine . 2>/dev/null
+
 if [ ! -x ".venv/bin/python" ]; then
     echo "Setting up Mediatheque for the first time. This takes a few minutes..."
     PY="$(command -v python3)"

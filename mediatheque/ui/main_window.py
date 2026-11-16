@@ -192,6 +192,8 @@ class MainWindow(QMainWindow):
         action(tools, "Open Download &Logs", lambda: open_path(str(log_dir())))
         action(tools, "&Clear Finished Downloads", lambda: self.downloader.clear_finished())
         action(tools, "&Pack for Another Computer…", self._pack_for_transfer)
+        if not edition.EDITOR:
+            action(tools, "Pack for Another &Editor…", self._pack_for_editor)
         tools.addSeparator()
         action(tools, "Sig&n In to Sites…", lambda: (self.show_tool(self._tool_index("screenshots")),
                                                     self.screenshots.sign_in()))
@@ -277,6 +279,31 @@ class MainWindow(QMainWindow):
             f"Packed Mediatheque and {n} script project{'s' if n != 1 else ''} into\n{path}\n\n"
             "Copy it to the other computer along with each video's project folder (BRoll, Screen Captures, "
             "Project Files…). MAC.md inside the zip says what to do next.")
+
+    def _pack_for_editor(self) -> None:
+        """Tools > Pack for Another Editor: a clean copy with Suggest off and none of your data."""
+        from PySide6.QtWidgets import QFileDialog
+        from ..transfer import editor_zip_name, pack_editor
+        from ..updates import update_repo
+        start = os.path.join(os.path.expanduser("~"), "Desktop", editor_zip_name())
+        path, _ = QFileDialog.getSaveFileName(self, "Pack Mediatheque for another editor", start, "Zip files (*.zip)")
+        if not path:
+            return
+        repo = update_repo(self.settings)
+        try:
+            names = pack_editor(Path(path), repo)
+        except (OSError, ValueError) as e:
+            QMessageBox.warning(self, "Pack for Another Editor", f"Couldn't make the package:\n\n{e}")
+            return
+        show_in_explorer(path)
+        updates = (f"It updates itself from github.com/{repo} when you publish an update (Tools > Publish Update…)."
+                   if repo else "Updates aren't set up yet, so this copy won't update itself. Tools > Publish "
+                   "Update… sets them up; pack again after that.")
+        QMessageBox.information(
+            self, "Pack for Another Editor",
+            f"Packed {len(names)} files into\n{path}\n\nIt has Suggest switched off and none of your projects, "
+            f"settings or patron lists. {updates}\n\nSend the editor the zip and say: unzip it into your home "
+            "folder, then double-click Mediatheque.command. EDITOR_SETUP.md inside has the rest.")
 
     def _api_key(self) -> None:
         from .suggest_ui import ApiKeyDialog
