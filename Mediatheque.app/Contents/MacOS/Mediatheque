@@ -19,6 +19,7 @@ The details are in Application Support > Mediatheque > logs > launch.log. Mediat
 note() { osascript -e "display notification \"$1\" with title \"Mediatheque\"" >/dev/null; }
 
 cd "$ROOT" || fail "The Mediatheque folder wasn't found next to the app or in your home folder."
+xattr -dr com.apple.quarantine "$ROOT" 2>/dev/null  # opened once already: no more warnings for its files
 
 if [ ! -x ".venv/bin/python" ]; then
     note "Setting up for the first time. This takes a few minutes."
@@ -28,7 +29,11 @@ if [ ! -x ".venv/bin/python" ]; then
     .venv/bin/python -m pip install --upgrade pip
     .venv/bin/python -m pip install -r requirements.txt || fail "Couldn't install Mediatheque's packages."
 fi
-.venv/bin/python -c "import anthropic, keyring" 2>/dev/null || .venv/bin/python -m pip install -r requirements.txt
+# Packages added by an update are installed now; otherwise this is quick.
+if ! .venv/bin/python -m mediatheque.reqcheck; then
+    note "Installing what the update needs (a minute or two)."
+    .venv/bin/python -m pip install -r requirements.txt && .venv/bin/python -m mediatheque.reqcheck --mark
+fi
 if ! .venv/bin/python -c "import sys; from mediatheque.screenshots.naming import own_browser; sys.exit(0 if own_browser() else 1)" 2>/dev/null; then
     note "Downloading Mediatheque's own browser (once, a few minutes)."
     .venv/bin/python -m playwright install chromium || echo "Couldn't download the browser; using Google Chrome."
