@@ -13,6 +13,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from .. import edition
 from ..config import Settings, log_dir
 from ..engine import YTDLP_VERSION
 from .chrome import TitleBar
@@ -194,7 +195,8 @@ class MainWindow(QMainWindow):
         tools.addSeparator()
         action(tools, "Sig&n In to Sites…", lambda: (self.show_tool(self._tool_index("screenshots")),
                                                     self.screenshots.sign_in()))
-        action(tools, "Claude &API Key…", self._api_key)
+        if edition.SUGGEST:
+            action(tools, "Claude &API Key…", self._api_key)
 
         help_menu = self.menu.addMenu("&Help")
         action(help_menu, "&About Mediatheque", self._about)

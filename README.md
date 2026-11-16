@@ -155,6 +155,15 @@ Click **Credits** in the sidebar (or press Ctrl+4):
 
 The sidebar on the left switches between tools: Ctrl+1 Script, Ctrl+2 Downloader, Ctrl+3 Screenshots, Ctrl+4 Credits.
 
+## Editions: your copy and an editor's copy
+
+The same code runs as two editions, chosen by one small file, `edition.json`, next to `Mediatheque.command`:
+
+- **Your copy has no `edition.json`.** Everything is on, including Suggest, and it never updates itself.
+- **An editor's copy** (made with **Tools > Pack for Another Editor…**) has `{"suggest": false, "updates": "owner/repo"}`. Suggest is gone: no **Suggest** button on cards, no Suggest items when you right-click the script, no **Lead** rows, no **Tools > Claude API Key…**, and the `anthropic` and `keyring` packages aren't loaded. Video leads, skipped suggestions and pointers saved in a project you send them are kept as they are, just not shown, so the project comes back to you intact.
+
+The switch is read in `mediatheque/edition.py`. Improvements you make to your copy reach the editor's copy unchanged, with Suggest still switched off.
+
 ## When something breaks
 
 Platforms change their sites often. In order:

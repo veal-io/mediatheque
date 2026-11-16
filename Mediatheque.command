@@ -17,7 +17,7 @@ if [ ! -x ".venv/bin/python" ]; then
 fi
 
 # Packages added since the first setup are installed on the next launch.
-.venv/bin/python -c "import anthropic, keyring" 2>/dev/null || .venv/bin/python -m pip install -r requirements.txt
+.venv/bin/python -c "import yt_dlp, PySide6" 2>/dev/null || .venv/bin/python -m pip install -r requirements.txt
 
 # Mediatheque's own browser (Chrome for Testing), a separate app from Google Chrome, so the
 # browser it runs in the background never stops your Chrome from opening. Downloaded once.

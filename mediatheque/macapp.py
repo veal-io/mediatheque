@@ -58,7 +58,7 @@ if [ ! -x ".venv/bin/python" ]; then
     .venv/bin/python -m pip install --upgrade pip
     .venv/bin/python -m pip install -r requirements.txt || fail "Couldn't install Mediatheque's packages."
 fi
-.venv/bin/python -c "import anthropic, keyring" 2>/dev/null || .venv/bin/python -m pip install -r requirements.txt
+.venv/bin/python -c "import yt_dlp, PySide6" 2>/dev/null || .venv/bin/python -m pip install -r requirements.txt
 if ! .venv/bin/python -c "import sys; from mediatheque.screenshots.naming import own_browser; sys.exit(0 if own_browser() else 1)" 2>/dev/null; then
     note "Downloading Mediatheque's own browser (once, a few minutes)."
     .venv/bin/python -m playwright install chromium || echo "Couldn't download the browser; using Google Chrome."

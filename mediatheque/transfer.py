@@ -15,6 +15,7 @@ import time
 import zipfile
 from pathlib import Path
 
+from . import edition
 from .config import data_dir
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -35,7 +36,7 @@ def pack(dest: Path) -> int:
         for p in projects:
             _add(z, p, Path("Mediatheque") / "transfer" / "projects" / p.name)
         profile = data_dir() / "suggest_profile.json"
-        if profile.exists():
+        if edition.SUGGEST and profile.exists():
             _add(z, profile, Path("Mediatheque") / "transfer" / profile.name)
     return len(projects)
 
@@ -64,7 +65,7 @@ def import_transfer() -> int:
         shutil.copy2(src, target)
         count += 1
     profile = folder / "suggest_profile.json"
-    if profile.exists() and not (data_dir() / profile.name).exists():
+    if edition.SUGGEST and profile.exists() and not (data_dir() / profile.name).exists():
         shutil.copy2(profile, data_dir() / profile.name)
     folder.rename(ROOT / f"transfer-imported-{time.strftime('%Y%m%d-%H%M%S')}")
     log.info("Imported %d script project(s) from the transfer folder", count)

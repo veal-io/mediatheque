@@ -37,10 +37,13 @@ from ..script.project import (
     guess_project_folder,
     link_kind, list_projects, project_path,
 )
-from ..script import suggest as sg
+from .. import edition
 from .projects_dialog import ProjectsDialog
-from .suggest_ui import PointersDialog, SuggestDialog, SuggestWorker, ensure_key
 from .theme import ui_font
+
+if edition.SUGGEST:  # an editor's copy has no Suggest, and doesn't need its packages (anthropic, keyring)
+    from ..script import suggest as sg
+    from .suggest_ui import PointersDialog, SuggestDialog, SuggestWorker, ensure_key
 from .trim_dialog import TrimDialog
 from .widgets import ElidedLabel, FitScrollArea, FolderCombo, FolderStore, JobRow, show_in_explorer
 
@@ -426,7 +429,7 @@ class ScriptView(QTextBrowser):
         cur = self.cursorForPosition(e.pos())
         block, pos = cur.block().blockNumber(), cur.positionInBlock()
         h = next((x for x in self._highlights if x.para == block and x.start <= pos <= x.end), None)
-        if h:
+        if h and edition.SUGGEST:
             first = menu.actions()[0] if menu.actions() else None
             busy = h.id in self.suggesting
             for mode, text in sg.MODES.items():
@@ -463,7 +466,8 @@ class AddedSources(QWidget):
         super().__init__(parent)
         self.items: list[tuple[Highlight, LinkRef]] = []
         intro = QLabel("Articles attached to highlights that the script doesn't link to, such as ones added "
-                       "with Add Links… or Suggest. Copy them for the sources document.")
+                       + ("with Add Links… or Suggest." if edition.SUGGEST else "with Add Links….")
+                       + " Copy them for the sources document.")
         intro.setObjectName("muted")
         intro.setWordWrap(True)
         self.rows_host = QWidget()
@@ -807,18 +811,20 @@ class HighlightCard(QFrame):
         remove = QPushButton("Remove")
         remove.setToolTip("Remove this highlight (downloaded files stay on disk).")
         remove.clicked.connect(lambda: self.remove_clicked.emit(self.hid))
-        suggest = QPushButton("Suggesting…" if suggesting else "Suggest")
-        suggest.setToolTip("Claude is researching this passage. Its suggestions open when it's done." if suggesting
-                           else "Ask Claude to find articles and video leads for this passage.")
-        suggest.setEnabled(not suggesting)
-        menu = QMenu(suggest)
-        for mode, text in sg.MODES.items():
-            menu.addAction(text, lambda m=mode: self.suggest_clicked.emit(self.hid, m))
-        suggest.setMenu(menu)
+        self.remove_btn = remove
         right = QVBoxLayout()
         right.setSpacing(4)
         right.addWidget(remove)
-        right.addWidget(suggest)
+        if edition.SUGGEST:
+            suggest = QPushButton("Suggesting…" if suggesting else "Suggest")
+            suggest.setToolTip("Claude is researching this passage. Its suggestions open when it's done."
+                               if suggesting else "Ask Claude to find articles and video leads for this passage.")
+            suggest.setEnabled(not suggesting)
+            menu = QMenu(suggest)
+            for mode, text in sg.MODES.items():
+                menu.addAction(text, lambda m=mode: self.suggest_clicked.emit(self.hid, m))
+            suggest.setMenu(menu)
+            right.addWidget(suggest)
         right.addStretch(1)
         top.addWidget(quote, 1)
         top.addLayout(right)
@@ -831,7 +837,9 @@ class HighlightCard(QFrame):
             note.setToolTip("Your note. Click Note… to change it.")
             col.addWidget(note)
 
-        for i, lead in enumerate(h.leads):
+        # Video leads come from Suggest. Without it they stay saved in the project but aren't shown.
+        leads = h.leads if edition.SUGGEST else []
+        for i, lead in enumerate(leads):
             line = QHBoxLayout()
             line.setSpacing(8)
             tag = QLabel("Lead")
@@ -853,7 +861,7 @@ class HighlightCard(QFrame):
             line.addWidget(drop)
             col.addLayout(line)
 
-        if not h.links and not h.images and not h.leads:
+        if not h.links and not h.images and not leads:
             none = QLabel("No links or images attached. Drop images here, or use Add Images…")
             none.setObjectName("muted")
             col.addWidget(none)
@@ -1008,10 +1016,11 @@ class ScriptPage(QWidget):
         self.selected = 0
         self.session = session
         self.previews = PreviewService(self)
-        self.suggester = SuggestWorker(self)
-        self.suggester.finished.connect(self._on_suggested)
-        self.suggester.failed.connect(self._on_suggest_failed)
-        self.suggester.status.connect(self.status)
+        if edition.SUGGEST:
+            self.suggester = SuggestWorker(self)
+            self.suggester.finished.connect(self._on_suggested)
+            self.suggester.failed.connect(self._on_suggest_failed)
+            self.suggester.status.connect(self.status)
         self._suggesting: dict[tuple[str, int], str] = {}  # (project file, highlight id) -> mode
         self._job_sources: dict[tuple[str, int], str] = {}  # (platform, job id) -> source credit
         self._looking_up: set[str] = set()  # videos whose credit is being fetched
@@ -1097,7 +1106,8 @@ class ScriptPage(QWidget):
         self.view.highlight_clicked.connect(self.select_from_script)
         self.view.paragraph_double_clicked.connect(self.edit_paragraph)
         self.view.images_dropped.connect(self.attach_images)
-        self.view.suggest_requested.connect(self.suggest)
+        if edition.SUGGEST:
+            self.view.suggest_requested.connect(self.suggest)
         self.highlight_btn = QPushButton("Hi&ghlight Selection")
         self.highlight_btn.setObjectName("primary")
         self.highlight_btn.setToolTip("Highlight the selected words and choose which of their links to attach.")
@@ -1533,8 +1543,9 @@ class ScriptPage(QWidget):
             for i, h in enumerate(p.visible, 1):
                 card = HighlightCard(h, i, h.id == self.selected,
                                      suggesting=self._suggesting.get((str(p.path), h.id), ""))
-                card.suggest_clicked.connect(self.suggest)
-                card.lead_removed.connect(self.remove_lead)
+                if edition.SUGGEST:
+                    card.suggest_clicked.connect(self.suggest)
+                    card.lead_removed.connect(self.remove_lead)
                 card.copy_source_clicked.connect(self.copy_source)
                 card.retake_clicked.connect(self.retake_article)
                 card.kind_switched.connect(self.switch_kind)
@@ -1630,7 +1641,7 @@ class ScriptPage(QWidget):
                                                                   if len(labels) <= 4 else f"({len(labels)})"))
             self.highlight_btn.setToolTip(
                 f"Merge these into highlight {labels[0]}, covering all their text. Their links, files, images, "
-                "leads and notes all move onto it.")
+                + ("leads and notes" if edition.SUGGEST else "and notes") + " all move onto it.")
             return
         h = hits[0] if hits else None
         self.highlight_btn.setText(f"Adjust Hi&ghlight {h.label}" if h else "Hi&ghlight Selection")
