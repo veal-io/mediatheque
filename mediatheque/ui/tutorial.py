@@ -14,6 +14,7 @@ from __future__ import annotations
 import os
 import re
 import shutil
+import sys
 from pathlib import Path
 
 from PySide6.QtCore import QEvent, QObject, QPoint, QRect, QSize, Qt, QTimer, Signal
@@ -83,7 +84,10 @@ def delete_practice(page, parent: QWidget | None, quiet: bool = False) -> bool:
         except OSError as e:
             problems.append(str(e))
     if MARKER.exists():
-        shutil.rmtree(PRACTICE_ROOT, onerror=lambda _f, path, exc: problems.append(f"{path}: {exc[1]}"))
+        def failed(_func, path, exc) -> None:  # exc: the exception (onexc) or its sys.exc_info() (onerror)
+            problems.append(f"{path}: {exc[1] if isinstance(exc, tuple) else exc}")
+        # onexc replaced onerror in Python 3.12
+        shutil.rmtree(PRACTICE_ROOT, **({"onexc": failed} if sys.version_info >= (3, 12) else {"onerror": failed}))
     root = os.path.normpath(str(PRACTICE_ROOT))
     if root in page.project_store.folders():
         page.project_store.remove(root)
