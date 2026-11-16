@@ -67,6 +67,8 @@ def main() -> int:
 
     window = MainWindow(Settings())
     window.show()
+    from PySide6.QtCore import QTimer
+    QTimer.singleShot(800, window.offer_tutorial)  # first launch: "New to Mediatheque? Take the tour"
     if imported:
         window.show_status(f"Brought in {imported} script project{'s' if imported != 1 else ''} from the "
                            "other computer. Open one from the Script tool's dropdown.", 20000)

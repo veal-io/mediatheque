@@ -199,7 +199,54 @@ class MainWindow(QMainWindow):
             action(tools, "Claude &API Key…", self._api_key)
 
         help_menu = self.menu.addMenu("&Help")
+        action(help_menu, "Script &Tutorial…", self.start_tutorial)
+        self.delete_practice_action = action(help_menu, "&Delete Practice Project", self._delete_practice)
+        help_menu.aboutToShow.connect(self._help_menu_opening)
+        help_menu.addSeparator()
         action(help_menu, "&About Mediatheque", self._about)
+
+    # -- the Script Tutorial ---------------------------------------------------------------
+
+    def start_tutorial(self) -> None:
+        from .tutorial import Tour
+        if getattr(self, "_tour", None) is not None:
+            return  # already running
+        self._tour = Tour(self)
+        self._tour.ended.connect(lambda: setattr(self, "_tour", None))
+        self._tour.start()
+
+    def offer_tutorial(self) -> None:
+        """On the first launch, offer the tour once ("Not now" asks again next time)."""
+        from ..script.project import list_projects
+        st = self.settings.data.setdefault("tutorial", {})
+        if st.get("offer") in ("never", "taken") or not (edition.EDITOR or not list_projects()):
+            return
+        box = QMessageBox(QMessageBox.Question, "Welcome to Mediatheque",
+                          "New to Mediatheque? Take the 5-minute Script tour.\n\n"
+                          "It uses a practice script, so nothing of yours is touched. "
+                          "Help > Script Tutorial… runs it any time.", parent=self)
+        start = box.addButton("Start", QMessageBox.AcceptRole)
+        box.addButton("Not now", QMessageBox.RejectRole)
+        never = box.addButton("Don't ask again", QMessageBox.DestructiveRole)
+        box.setDefaultButton(start)
+        box.exec()
+        st["offer"] = "taken" if box.clickedButton() is start else "never" if box.clickedButton() is never else "later"
+        self.settings.save()
+        if box.clickedButton() is start:
+            self.start_tutorial()
+
+    def _help_menu_opening(self) -> None:
+        from .tutorial import practice_exists
+        self.delete_practice_action.setEnabled(practice_exists() and getattr(self, "_tour", None) is None)
+
+    def _delete_practice(self) -> None:
+        from .tutorial import delete_practice
+        if QMessageBox.question(self, "Delete Practice Project",
+                                "Delete the Script Tutorial's practice project and anything it downloaded? "
+                                "Your own projects aren't touched.") != QMessageBox.Yes:
+            return
+        if delete_practice(self.script, self):
+            self.show_status("Deleted the practice project.")
 
     def show_status(self, text: str, ms: int = 8000) -> None:
         self.status_msg.setText(text)

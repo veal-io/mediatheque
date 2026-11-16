@@ -145,6 +145,15 @@ Click **Script** at the top of the sidebar (or press Ctrl+1, or **File > Open Sc
 - **Manage Projects…** (in the dropdown) lists every project with its progress. From there you can open one, **Restore Earlier Version…** (backups are kept automatically, at most every 10 minutes, latest 15), or **Remove from List** (the project file is moved to the backups folder, never deleted).
 - **Where they live:** projects are saved under `%APPDATA%\Mediatheque\projects` (on a Mac, `~/Library/Application Support/Mediatheque/projects`), backups in its `backups` folder. Re-importing an edited version of the same script picks up where you left off.
 
+## Script Tutorial
+
+**Help > Script Tutorial…** is a guided tour of the Script tool for someone new to Mediatheque, about five minutes. On the first launch (of an editor's copy, or any copy with no projects yet), Mediatheque offers it once: **Start**, **Not now** (asks again next launch) or **Don't ask again**.
+
+- **Practice material:** it copies a sample script (`mediatheque/assets/tutorial/Sample Script.docx`) into `~/Mediatheque Tutorial/Project Files/` and imports it as a normal project, so real work is never touched. The sample has `[source]` and `[video]` links to Wikipedia, the first YouTube video and the first post on X, and research notes after "(sign off)" for the import step to leave out.
+- **The coach panel** sits beside the part of the window it's talking about, which gets a red and yellow outline. Hands-on steps ("click Note… and type a note") move on by themselves once it's done, and **Next** always skips. Drag the panel by its title bar if it's in the way.
+- **Afterwards:** at the end, or on **Exit Tour**, it offers to delete the practice project (the folder and its project file), then goes back to the script you had open. **Help > Delete Practice Project** does the same later.
+- **Changing the wording:** every step's title, text, what it outlines and what it waits for is in `mediatheque/tutorial_steps.py`, with notes at the top on what each field does.
+
 ## Credit Generator
 
 Click **Credits** in the sidebar (or press Ctrl+4):

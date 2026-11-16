@@ -1007,6 +1007,7 @@ class ScriptPage(QWidget):
     image_downloaded = Signal(int, str, str)  # highlight id, saved path, error
     source_found = Signal(object, str, str, str)  # project, url, credit, error
     posts_checked = Signal(object, dict, str)     # project, {url: (kind, note)}, Execute button to carry on with
+    changed = Signal()  # the page was redrawn or its buttons updated (the Script Tutorial listens)
 
     def __init__(self, settings: Settings, folders: FolderStore, session: SessionWorker, parent=None):
         super().__init__(parent)
@@ -1055,7 +1056,7 @@ class ScriptPage(QWidget):
                                    "project (nothing is lost meanwhile: the project keeps a copy of the text).")
         self.locate_btn.clicked.connect(self.locate_script)
         self.locate_btn.hide()
-        import_btn = QPushButton("&Import Script…")
+        self.import_btn = import_btn = QPushButton("&Import Script…")
         import_btn.clicked.connect(self.browse)
         self.trim_btn = QPushButton("T&rim Script…")
         self.trim_btn.setToolTip("Choose which paragraphs to leave out (research notes and the like).")
@@ -1375,6 +1376,42 @@ class ScriptPage(QWidget):
         else:
             self._refresh_script_combo()
 
+    def card_widgets(self) -> list[HighlightCard]:
+        """The highlight cards, in order."""
+        return [w for i in range(self.cards.count()) if isinstance(w := self.cards.itemAt(i).widget(), HighlightCard)]
+
+    def project_busy(self, project_file) -> bool:
+        """A project still downloading or capturing."""
+        key = os.path.normcase(str(project_file))
+        if any(os.path.normcase(str(proj.path)) == key for proj, _ in self.stops.values()):
+            return True
+        return any(os.path.normcase(str(proj.path)) == key and (row := self.job_rows.get(k)) and not row.finished
+                   for k, (proj, _) in self.jobs.items())
+
+    def close_project(self, project_file) -> None:
+        """Let go of a project that's about to be deleted (the tutorial's practice project): it's no
+        longer open, and its finished rows leave the Video Downloads tab. Check project_busy first."""
+        key = os.path.normcase(str(project_file))
+        for k, (proj, _) in list(self.jobs.items()):
+            if os.path.normcase(str(proj.path)) == key:
+                self.jobs.pop(k)
+                if row := self.job_rows.pop(k, None):
+                    self.dl_list.removeWidget(row)
+                    row.deleteLater()
+        if not self.job_rows:
+            self.dl_empty.show()
+        self._open.pop(key, None)
+        if self.project is not None and os.path.normcase(str(self.project.path)) == key:
+            self.project = None
+            self.selected = 0
+            self.view.load([])
+            self.view.set_highlights([])
+            self.trim_btn.setEnabled(False)
+            self.locate_btn.hide()
+            self._show_saved()
+            self.refresh()
+        self._refresh_script_combo()
+
     def manage_projects(self) -> None:
         busy = {os.path.normcase(str(proj.path)) for k, (proj, _) in self.jobs.items()
                 if (row := self.job_rows.get(k)) and not row.finished}
@@ -1587,6 +1624,7 @@ class ScriptPage(QWidget):
             self.summary.setText("No script loaded.")
             self.exec_videos.setEnabled(False)
             self.exec_shots.setEnabled(False)
+            self.changed.emit()
             return
         vids = [r for _, r in p.refs("video")]
         arts = [r for _, r in p.refs("article")]
@@ -1601,6 +1639,7 @@ class ScriptPage(QWidget):
         self.exec_videos.setText(f"Execute Video &Downloads ({vids_todo})" if vids_todo else "Execute Video &Downloads")
         self.exec_shots.setEnabled(arts_todo > 0 and self._sorting is None)
         self.exec_shots.setText(f"Execute S&creenshotter ({arts_todo})" if arts_todo else "Execute S&creenshotter")
+        self.changed.emit()
 
     def select_from_script(self, hid: int) -> None:
         """A highlight clicked in the script: bring its card (and files) to the middle of the list."""
