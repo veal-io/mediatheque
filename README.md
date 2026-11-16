@@ -178,6 +178,20 @@ The same code runs as two editions, chosen by one small file, `edition.json`, ne
 
 **Tools > Pack for Another Editor…** makes the editor's zip, `Mediatheque-editor-<version>.zip` on the Desktop. Don't use **Pack for Another Computer…** for an editor: that one carries all your projects. The editor's zip has only the app (the `mediatheque` folder, both launchers, Mediatheque.app, `requirements.txt`), README.md, EDITOR_SETUP.md and `edition.json`. It leaves out `.venv`, git, transfers, LESSONS.md, MAC.md, EDITOR_EDITION.md, the old `Credit Generator` folder (the Credits tool is built in), every `.csv`, and all your data (projects, settings, Suggest profile, logs and browser sign-ins live in Application Support, not in the folder). It checks its own contents before saving and refuses if anything personal slipped in. Parts of this README marked `<!-- owner -->` or `<!-- suggest -->` are taken out of the editor's copy. Mediatheque.app goes in as a bare launcher with no paths from your Mac; the editor's first launch fills in the rest.
 
+### Publishing an update to editors
+
+Editors' copies update themselves from a public GitHub page of Mediatheque's code. You need the GitHub command-line tool installed and signed in once (`gh auth login` in Terminal; Check Setup doesn't cover this because only you need it).
+
+1. Make your changes and try them in your own copy as usual.
+2. Choose **Tools > Publish Update…**. Type the new version number (it suggests the next one, like 1.0.1 after 1.0.0) and a few plain lines on what's new. Editors see those lines before they update.
+3. Click **Publish**. It sets the version, commits, pushes to GitHub, builds the editor's zip with **Pack for Another Editor**, and publishes it as release `v<version>` with the zip and its `.sha256` attached. Each step shows as it runs, and if something's missing (gh not installed or not signed in, say) it says exactly what to do.
+
+The first time, it also creates the public page (named `mediatheque` unless you change it) under your account.
+
+**What's public, and what isn't:** only the files git tracks. `.gitignore` keeps out `.venv`, transfers, the old `Credit Generator` folder, every `.csv`, LESSONS.md, MAC.md and EDITOR_EDITION.md, and Publish Update refuses to go ahead if anything personal is about to be published. Your projects, settings and logs aren't in this folder at all. Changes are signed with GitHub's private no-reply address, never your email: Publish Update sets that up, re-signs any unpublished change made with another address, and checks every change's address before each push.
+
+**On the editor's side:** Mediatheque checks GitHub once a day when it opens (and right away from **Help > Check for Updates**). It shows "Update available", your notes, and **Update Now** / **Later**. The download is checked against its SHA-256 before anything changes, unpacked to a temporary folder first, then swapped in: the `mediatheque` package, launchers, Mediatheque.app's launcher, `requirements.txt`, `edition.json` and the docs. `.venv` stays, and the editor's projects, settings and logs aren't touched. The previous version goes to `update-backup/` for **Help > Undo Last Update**. If a new version needs a new package, the launcher installs it on the next start (it remembers a fingerprint of `requirements.txt` in `.venv/requirements.sha`). Your own copy never installs updates: it has no `edition.json`, and it's a git folder.
+
 The switch is read in `mediatheque/edition.py`. Improvements you make to your copy reach the editor's copy unchanged, with Suggest still switched off.
 <!-- /owner -->
 

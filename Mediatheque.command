@@ -20,8 +20,8 @@ if [ ! -x ".venv/bin/python" ]; then
     .venv/bin/python -m pip install -r requirements.txt || { read -n 1 -s -r -p "Press any key to close."; exit 1; }
 fi
 
-# Packages added since the first setup are installed on the next launch.
-.venv/bin/python -c "import yt_dlp, PySide6" 2>/dev/null || .venv/bin/python -m pip install -r requirements.txt
+# Packages added since the last launch (by an update, say) are installed now; otherwise this is quick.
+.venv/bin/python -m mediatheque.reqcheck || { .venv/bin/python -m pip install -r requirements.txt && .venv/bin/python -m mediatheque.reqcheck --mark; }
 
 # Mediatheque's own browser (Chrome for Testing), a separate app from Google Chrome, so the
 # browser it runs in the background never stops your Chrome from opening. Downloaded once.

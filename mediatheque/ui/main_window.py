@@ -194,6 +194,7 @@ class MainWindow(QMainWindow):
         action(tools, "&Pack for Another Computer…", self._pack_for_transfer)
         if not edition.EDITOR:
             action(tools, "Pack for Another &Editor…", self._pack_for_editor)
+            action(tools, "Publish U&pdate…", self._publish_update)
         tools.addSeparator()
         action(tools, "Sig&n In to Sites…", lambda: (self.show_tool(self._tool_index("screenshots")),
                                                     self.screenshots.sign_in()))
@@ -207,6 +208,11 @@ class MainWindow(QMainWindow):
         help_menu.addSeparator()
         action(help_menu, "&Report a Problem…", self._report_problem)
         action(help_menu, "Check &Setup…", self._check_setup)
+        from ..updates import can_update
+        if can_update():  # an editor's copy: it updates itself from GitHub
+            help_menu.addSeparator()
+            action(help_menu, "Check for &Updates", lambda: self.check_for_updates(quiet=False))
+            self.undo_update_action = action(help_menu, "U&ndo Last Update", self._undo_update)
         help_menu.addSeparator()
         action(help_menu, "&About Mediatheque", self._about)
 
@@ -243,6 +249,83 @@ class MainWindow(QMainWindow):
     def _help_menu_opening(self) -> None:
         from .tutorial import practice_exists
         self.delete_practice_action.setEnabled(practice_exists() and getattr(self, "_tour", None) is None)
+        if hasattr(self, "undo_update_action"):
+            from ..updates import backup_version
+            back = backup_version()
+            self.undo_update_action.setEnabled(bool(back))
+            self.undo_update_action.setText(f"U&ndo Last Update (back to {back})" if back else "U&ndo Last Update")
+
+    # -- updates (an editor's copy) -----------------------------------------------------------
+
+    def _busy(self) -> bool:
+        return bool(self.downloader.active_count() + self.screenshots.active_count() + self.script.active_count())
+
+    def startup_checks(self) -> None:
+        """After the window is up: the first-launch tour offer, then (an editor's copy, once a day) updates."""
+        from ..updates import can_update, due_for_check
+        self.offer_tutorial()
+        if can_update() and due_for_check(self.settings):
+            QTimer.singleShot(3000, lambda: self.check_for_updates(quiet=True))
+
+    def check_for_updates(self, quiet: bool = True) -> None:
+        """Ask GitHub for a newer version. quiet: the daily check at launch, which says nothing unless
+        there's an update."""
+        from .. import __version__
+        from ..updates import mark_checked, update_repo
+        from .updates_ui import Checker
+        if getattr(self, "_checker", None) is not None:
+            return
+        self._checker = Checker(self)
+
+        def found(rel) -> None:
+            self._checker = None
+            mark_checked(self.settings)
+            if rel is not None:
+                self._offer_update(rel)
+            elif not quiet:
+                QMessageBox.information(self, "Check for Updates", f"You have the latest version ({__version__}).")
+
+        def failed(message: str) -> None:
+            self._checker = None
+            if not quiet:
+                QMessageBox.warning(self, "Check for Updates", message)
+
+        self._checker.found.connect(found)
+        self._checker.failed.connect(failed)
+        self._checker.start(update_repo(self.settings))
+        if not quiet:
+            self.show_status("Checking for updates…")
+
+    def _offer_update(self, rel) -> None:
+        from .updates_ui import UpdateDialog, offer_restart
+        dlg = UpdateDialog(rel, self._busy, self)
+        if dlg.exec() == UpdateDialog.Accepted and dlg.installed:
+            self.engine_label.setText(f"Mediatheque {dlg.installed} (restart to use)")
+            offer_restart(self, f"Updated to version {dlg.installed}.")
+
+    def _undo_update(self) -> None:
+        from .. import __version__
+        from ..updates import UpdateError, backup_version, undo
+        from .updates_ui import offer_restart
+        back = backup_version()
+        if not back or QMessageBox.question(
+                self, "Undo Last Update", f"Go back from version {__version__} to version {back}?\n\nYour projects "
+                "and settings aren't touched.") != QMessageBox.Yes:
+            return
+        if self._busy():
+            QMessageBox.information(self, "Undo Last Update", "Let the downloads and captures finish first.")
+            return
+        try:
+            version = undo()
+        except UpdateError as e:
+            QMessageBox.warning(self, "Undo Last Update", str(e))
+            return
+        offer_restart(self, f"Went back to version {version}.")
+
+    def _publish_update(self) -> None:
+        from .publish_ui import PublishDialog
+        self.script.save_all()
+        PublishDialog(self.settings, self).exec()
 
     def _delete_practice(self) -> None:
         from .tutorial import delete_practice

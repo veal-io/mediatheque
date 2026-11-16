@@ -59,7 +59,11 @@ if [ ! -x ".venv/bin/python" ]; then
     .venv/bin/python -m pip install --upgrade pip
     .venv/bin/python -m pip install -r requirements.txt || fail "Couldn't install Mediatheque's packages."
 fi
-.venv/bin/python -c "import yt_dlp, PySide6" 2>/dev/null || .venv/bin/python -m pip install -r requirements.txt
+# Packages added by an update are installed now; otherwise this is quick.
+if ! .venv/bin/python -m mediatheque.reqcheck; then
+    note "Installing what the update needs (a minute or two)."
+    .venv/bin/python -m pip install -r requirements.txt && .venv/bin/python -m mediatheque.reqcheck --mark
+fi
 if ! .venv/bin/python -c "import sys; from mediatheque.screenshots.naming import own_browser; sys.exit(0 if own_browser() else 1)" 2>/dev/null; then
     note "Downloading Mediatheque's own browser (once, a few minutes)."
     .venv/bin/python -m playwright install chromium || echo "Couldn't download the browser; using Google Chrome."
@@ -83,13 +87,14 @@ def _venv() -> tuple[Path, Path, str]:
     return cfg, src, lib
 
 
-def info_plist() -> dict:
+def info_plist(version: str | None = None) -> dict:
     from . import __version__
+    version = version or __version__
     return {
         "CFBundleName": "Mediatheque", "CFBundleDisplayName": "Mediatheque",
         "CFBundleIdentifier": BUNDLE_ID, "CFBundleExecutable": "Mediatheque",
         "CFBundleIconFile": "Mediatheque", "CFBundlePackageType": "APPL",
-        "CFBundleShortVersionString": __version__, "CFBundleVersion": __version__,
+        "CFBundleShortVersionString": version, "CFBundleVersion": version,
         "LSMinimumSystemVersion": "11.0", "NSHighResolutionCapable": True,
         "NSSupportsAutomaticGraphicsSwitching": True,
     }

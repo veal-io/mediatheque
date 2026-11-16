@@ -7,6 +7,6 @@ if not exist ".venv\Scripts\pythonw.exe" (
     ".venv\Scripts\python.exe" -m pip install --upgrade pip
     ".venv\Scripts\python.exe" -m pip install -r requirements.txt || (pause & exit /b 1)
 )
-rem Packages added after first setup are installed on the next launch.
-".venv\Scripts\python.exe" -c "import yt_dlp, PySide6" 2>nul || ".venv\Scripts\python.exe" -m pip install -r requirements.txt
+rem Packages added since the last launch (by an update, say) are installed now; otherwise this is quick.
+".venv\Scripts\python.exe" -m mediatheque.reqcheck || (".venv\Scripts\python.exe" -m pip install -r requirements.txt && ".venv\Scripts\python.exe" -m mediatheque.reqcheck --mark)
 start "" ".venv\Scripts\pythonw.exe" -m mediatheque

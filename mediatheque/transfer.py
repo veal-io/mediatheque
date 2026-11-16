@@ -77,17 +77,17 @@ def editor_text(md: str) -> str:
     return re.sub(r"\n{3,}", "\n\n", md)
 
 
-def editor_zip_name() -> str:
+def editor_zip_name(version: str | None = None) -> str:
     from . import __version__
-    return f"Mediatheque-editor-{__version__}.zip"
+    return f"Mediatheque-editor-{version or __version__}.zip"
 
 
-def mac_app_shell() -> list[tuple[str, bytes, bool]]:
+def mac_app_shell(version: str | None = None) -> list[tuple[str, bytes, bool]]:
     """Mediatheque.app as it goes in a package: its launcher, Info.plist and icon, with no paths from
     this computer. On the editor's Mac, the first launch adds the rest (see macapp.py)."""
     import plistlib
     from . import macapp
-    files = [("Mediatheque.app/Contents/Info.plist", plistlib.dumps(macapp.info_plist()), False),
+    files = [("Mediatheque.app/Contents/Info.plist", plistlib.dumps(macapp.info_plist(version)), False),
              ("Mediatheque.app/Contents/MacOS/Mediatheque", macapp.LAUNCHER.encode(), True)]
     icon = ROOT / "Mediatheque.app" / "Contents" / "Resources" / "Mediatheque.icns"
     if icon.exists():
@@ -110,7 +110,7 @@ def editor_files() -> list[tuple[Path, str]]:
     return out
 
 
-def pack_editor(dest: Path, updates: str = "") -> list[str]:
+def pack_editor(dest: Path, updates: str = "", version: str | None = None) -> list[str]:
     """Write an editor's copy: the app with Suggest switched off, updating itself from `updates`
     ("owner/repo" on GitHub, or "" for none). Returns the names in the zip, after checking that
     nothing personal got in."""
@@ -122,7 +122,7 @@ def pack_editor(dest: Path, updates: str = "") -> list[str]:
             if rel.endswith(".md"):
                 data = editor_text(data.decode("utf-8")).encode("utf-8")
             _write(z, data, Path("Mediatheque") / rel, src.name in EXECUTABLE, src)
-        for rel, data, executable in mac_app_shell():
+        for rel, data, executable in mac_app_shell(version):
             _write(z, data, Path("Mediatheque") / rel, executable)
         _write(z, (edition_json + "\n").encode(), Path("Mediatheque") / "edition.json")
     names = zipfile.ZipFile(tmp).namelist()
